@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="rating" content="safe for kids">
+  <title>Eorum – It's theirs</title>
+  <style>
+    body {
+      max-width: 30em;
+      margin: 1em;
+    }
+
+    input,
+    button {
+      font-size: 1rem;
+    }
+
+    p {
+      font-family: monospace;
+    }
+
+  </style>
+</head>
+<body>
+  <input id="their" type="email" value="info@eorum.org">
+  <button id="button">Resolve</button>
+  <p id="result"></p>
+  <a id="link"></a>
+
+  <script>
+    "use strict;"
+
+    const e = {
+      their: document.getElementById('their'),
+      button: document.getElementById("button"),
+      result: document.getElementById("result"),
+      link: document.getElementById("link")
+    };
+
+    async function resolve() {
+      const [user, domain] = their.value.split("@");
+      const params = new URLSearchParams({
+        name: "_eorum._tcp." + domain,
+        type: "SRV"
+      });
+
+      const url = "https://cloudflare-dns.com/dns-query?" + params.toString();
+      const response = await fetch(url, {
+        headers: {
+          accept: "application/dns-json"
+        }
+      });
+
+      const reply = await (response.json());
+      if (reply.Status === 0) {
+        const [prio, weight, port, target] = reply.Answer[0].data.split(' ');
+        e.result.innerHTML = 'SRV ' + target + ':' + port + ' ' + weight + ':' + prio;
+
+        e.link.innerHTML = target;
+        if (port != 443)
+          e.link.innerHTML += ':' + port;
+        e.link.innerHTML += '/' + their.value;
+
+        e.link.href = 'https://' + target + ':' + port + '/' + their.value;
+        e.link.target = 'eorum';
+
+      } else {
+        e.result.innerHTML = "Error Status: " + String(reply.Status);
+        e.link.innerHTML = '';
+        e.link.href = '';
+      }
+    }
+
+    {
+      const url = new URL(window.location);
+      const their = url.searchParams.get('their');
+      if (their)
+        e.their.value = their;
+    }
+
+    button.addEventListener("click", resolve);
+  </script>
+</body>
+</html>
