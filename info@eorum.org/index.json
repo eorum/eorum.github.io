@@ -1,8 +1,6 @@
 {
-  "info@eroum.org": {
-    "person@schema.eorum.org": {
-      "name": "Eorum",
-      "avatar": "http://github.com/eorum.png"
-    }
+  "info@eorum.org": {
+    "name": "Eorum",
+    "picture": "http://github.com/eorum.png"
   }
 }
