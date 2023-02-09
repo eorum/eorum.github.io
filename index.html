@@ -7,7 +7,7 @@
   <title>Eorum – It's theirs</title>
   <style>
     body {
-      max-width: 30em;
+      max-width: 60em;
       margin: 1em;
     }
 
@@ -23,22 +23,47 @@
   </style>
 </head>
 <body>
-  <input id="their" type="email" value="info@eorum.org">
-  <button id="button">Resolve</button>
-  <p id="result"></p>
-  <a id="link"></a>
+  <p>Status: <span id="status">Ready</span></p>
 
+  <div>
+    <input id="their" type="email" value="info@eorum.org" size="40">
+    <button id="theirButton">Resolve</button>
+  </div>
+
+  <div>
+    <input id="request" type="text" size="40">
+    <button id="requestButton">Request</button>
+  </div>
+
+  <pre id="reply"></pre>
   <script>
-    "use strict;"
+    'use strict;'
 
     const e = {
+      status: document.getElementById('status'),
       their: document.getElementById('their'),
-      button: document.getElementById("button"),
-      result: document.getElementById("result"),
-      link: document.getElementById("link")
+      theirButton: document.getElementById("theirButton"),
+      request: document.getElementById("request"),
+      requestButton: document.getElementById("requestButton"),
+      reply: document.getElementById("reply")
     };
 
-    async function resolve() {
+    async function resolveEorum(url) {
+      e.status.innerHTML = 'Eorum request';
+      const eorumResponse = await fetch(url, {
+        headers: {
+          accept: "application/json"
+        }
+      });
+
+      const eorumReply = await (eorumResponse.json());
+      e.status.innerHTML = "Eorum reply";
+      e.reply.innerText = JSON.stringify(eorumReply, null, 2);
+    }
+
+    async function resolveDNS() {
+      e.status.innerHTML = "DNS query";
+
       const [user, domain] = their.value.split("@");
       const params = new URLSearchParams({
         name: "_eorum._tcp." + domain,
@@ -46,29 +71,31 @@
       });
 
       const url = "https://cloudflare-dns.com/dns-query?" + params.toString();
-      const response = await fetch(url, {
+      const dnsResponse = await fetch(url, {
         headers: {
           accept: "application/dns-json"
         }
       });
 
-      const reply = await (response.json());
-      if (reply.Status === 0) {
-        const [prio, weight, port, target] = reply.Answer[0].data.split(' ');
-        e.result.innerHTML = 'SRV ' + target + ':' + port + ' ' + weight + ':' + prio;
+      const dnsReply = await (dnsResponse.json());
+      if (dnsReply.Status === 0) {
+        e.status.innerHTML = "DNS reply";
 
-        e.link.innerHTML = target;
+        const [prio, weight, port, target] = dnsReply.Answer[0].data.split(' ');
+
+        e.request.value = target;
         if (port != 443)
-          e.link.innerHTML += ':' + port;
-        e.link.innerHTML += '/' + their.value;
+          e.request.value += ':' + port;
+        e.request.value += '/' + their.value;
 
-        e.link.href = 'https://' + target + ':' + port + '/' + their.value;
-        e.link.target = 'eorum';
+        e.requestButton.addEventListener('click', () => {
+          resolveEorum('https://' + target + ':' + port + '/' + their.value);
+        });
 
       } else {
-        e.result.innerHTML = "Error Status: " + String(reply.Status);
-        e.link.innerHTML = '';
-        e.link.href = '';
+        e.request.value = '';
+        e.reply.innerText = '';
+        e.status.innerHTML = 'DNS error: ' + String(dnsReply.Status);
       }
     }
 
@@ -79,7 +106,7 @@
         e.their.value = their;
     }
 
-    button.addEventListener("click", resolve);
+    theirButton.addEventListener('click', resolveDNS);
   </script>
 </body>
 </html>
