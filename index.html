@@ -98,7 +98,6 @@
       const url = "https://cloudflare-dns.com/dns-query?" + params.toString();
       const response = await fetch(url, {
         headers: {
-          cache: 'no-cache',
           accept: "application/dns-json"
         }
       });
@@ -118,7 +117,6 @@
     async function resolveEorum(url) {
       const response = await fetch(url, {
         headers: {
-          cache: 'no-cache',
           accept: "application/json"
         }
       });
@@ -131,6 +129,9 @@
     }
 
     e.eorum.button.addEventListener('click', () => {
+      if (!e.eorum.input.value)
+        return;
+
       e.eorum.status.innerHTML = "DNS query";
       e.dns.input.value = '';
       e.result.text.innerHTML = '';
@@ -146,6 +147,9 @@
     });
 
     e.dns.button.addEventListener('click', () => {
+      if (!e.dns.input.value)
+        return;
+
       e.eorum.status.innerHTML = "Eorum query";
       e.result.text.innerHTML = '';
 
