@@ -4,109 +4,165 @@
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="rating" content="safe for kids">
+  <meta name="description" content="Pretend it's nothing.">
+  <link rel="canonical" href="https://eorum.org/">
+  <meta name="theme-color" content="black">
+  <link rel="stylesheet" href="css/bulma.min.css">
   <title>Eorum – It's theirs</title>
   <style>
+    html {
+      background-color: black;
+      scroll-padding-top: 3.25rem;
+      scroll-behavior: smooth;
+      hyphens: auto;
+    }
+
     body {
-      max-width: 60em;
-      margin: 1em;
+      font-family: sans-serif;
+      color: hsl(0, 0%, 21%);
     }
 
-    input,
-    button {
-      font-size: 1rem;
+    section {
+      background-color: hsl(0, 0%, 92%);
+      padding: 1rem;
     }
 
-    p {
-      font-family: monospace;
+    section:not(:first-of-type) {
+      margin-top: 0.25rem;
     }
 
   </style>
 </head>
 <body>
-  <p>Status: <span id="status">Ready</span></p>
+  <section id="eorum">
+    <div class="container">
+      <h2 class="title">
+        Eorum
+      </h2>
+      <div class="field has-addons">
+        <input id="eorumInput" class="input" type="email" value="info@eorum.org">
+        <button id="eorumButton" class="button">Resolve</button>
+      </div>
 
-  <div>
-    <input id="their" type="email" value="info@eorum.org" size="40">
-    <button id="theirButton">Resolve</button>
-  </div>
+      <p id="eorumStatus">Ready</p>
+    </div>
+  </section>
 
-  <div>
-    <input id="request" type="text" size="40">
-    <button id="requestButton">Request</button>
-  </div>
+  <section id="dns">
+    <div class="container">
+      <h2 class="title">
+        DNS
+      </h2>
+      <div class="field has-addons">
+        <input id="dnsInput" class="input" type="text" size="40">
+        <button id="dnsButton" class="button">Request</button>
+      </div>
+    </div>
+  </section>
 
-  <pre id="reply"></pre>
+  <section id="result">
+    <div class="container">
+      <h2 class="title">
+        Result
+      </h2>
+
+      <pre id="resultText"></pre>
+    </div>
+  </section>
+
   <script>
     'use strict;'
 
     const e = {
-      status: document.getElementById('status'),
-      their: document.getElementById('their'),
-      theirButton: document.getElementById("theirButton"),
-      request: document.getElementById("request"),
-      requestButton: document.getElementById("requestButton"),
-      reply: document.getElementById("reply")
+      eorum: {
+        input: document.getElementById('eorumInput'),
+        button: document.getElementById("eorumButton"),
+        status: document.getElementById('eorumStatus')
+      },
+      dns: {
+        input: document.getElementById("dnsInput"),
+        button: document.getElementById("dnsButton")
+      },
+      result: {
+        text: document.getElementById("resultText")
+      }
     };
 
-    async function resolveEorum(url) {
-      e.status.innerHTML = 'Eorum request';
-      const eorumResponse = await fetch(url, {
-        headers: {
-          accept: "application/json"
-        }
-      });
-
-      const eorumReply = await (eorumResponse.json());
-      e.status.innerHTML = "Eorum reply";
-      e.reply.innerText = JSON.stringify(eorumReply, null, 2);
-    }
-
-    async function resolveDNS() {
-      e.status.innerHTML = "DNS query";
-
-      const [user, domain] = their.value.split("@");
+    async function resolveDNS(address) {
+      const [user, domain] = address.split("@");
       const params = new URLSearchParams({
         name: "_eorum._tcp." + domain,
         type: "SRV"
       });
 
       const url = "https://cloudflare-dns.com/dns-query?" + params.toString();
-      const dnsResponse = await fetch(url, {
+      const response = await fetch(url, {
         headers: {
           accept: "application/dns-json"
         }
       });
 
-      const dnsReply = await (dnsResponse.json());
-      if (dnsReply.Status === 0) {
-        e.status.innerHTML = "DNS reply";
+      if (!response.ok || response.status != 200)
+        throw 'DNS query error: ' + response.status;
 
-        const [prio, weight, port, target] = dnsReply.Answer[0].data.split(' ');
+      const reply = await response.json();
+      if (reply.Status === 0) {
+        const [prio, weight, port, target] = reply.Answer[0].data.split(' ');
+        return 'https://' + target + (port != 443 ? ':' + port : '') + '/' + address;
 
-        e.request.value = target;
-        if (port != 443)
-          e.request.value += ':' + port;
-        e.request.value += '/' + their.value;
+      } else
+        throw 'DNS error: ' + String(reply.Status);
+    }
 
-        e.requestButton.addEventListener('click', () => {
-          resolveEorum('https://' + target + ':' + port + '/' + their.value);
-        });
+    async function resolveEorum(url) {
+      const response = await fetch(url, {
+        headers: {
+          accept: "application/json"
+        }
+      });
 
-      } else {
-        e.request.value = '';
-        e.reply.innerText = '';
-        e.status.innerHTML = 'DNS error: ' + String(dnsReply.Status);
-      }
+      if (!response.ok || response.status != 200)
+        return 'Eorum query error: ' + response.status;
+
+      const reply = await response.json();
+      return JSON.stringify(reply, null, 2);
     }
 
     {
       const url = new URL(window.location);
       const their = url.searchParams.get('their');
       if (their)
-        e.their.value = their;
+        e.eorum.input.value = their;
     }
 
-    theirButton.addEventListener('click', resolveDNS);
+    e.eorum.button.addEventListener('click', () => {
+      e.eorum.status.innerHTML = "DNS query";
+
+      resolveDNS(e.eorum.input.value)
+        .then((result) => {
+          e.dns.input.value = result;
+          e.eorum.status.innerHTML = "DNS reply";
+        })
+        .catch((error) => {
+          e.dns.input.value = '';
+          e.eorum.status.innerHTML = "DNS error: " + error;
+        })
+    });
+
+    e.dns.button.addEventListener('click', () => {
+      e.eorum.status.innerHTML = "Eorum query";
+
+      resolveEorum(e.dns.input.value)
+        .then((result) => {
+          e.result.text.innerHTML = result;
+          e.eorum.status.innerHTML = "Eorum reply";
+        })
+        .catch((error) => {
+          e.result.text.innerHTML = '';
+          e.eorum.status.innerHTML = "Eorum error: " + error;
+        })
+    });
+
   </script>
 </body>
 </html>
