@@ -35,23 +35,17 @@
 </head>
 <body>
   <section id="eorum">
-    <div class="container">
-      <h2 class="title">
-        Eorum
-      </h2>
-      <div class="field has-addons">
-        <input id="eorumInput" class="input" type="email" value="info@eorum.org">
-        <button id="eorumButton" class="button">Resolve</button>
-      </div>
-
-      <p id="eorumStatus">Ready</p>
+    <div class="field has-addons">
+      <input id="eorumInput" class="input" type="email" value="info@eorum.org">
+      <button id="eorumButton" class="button">Resolve</button>
+    </div>
     </div>
   </section>
 
   <section id="dns">
     <div class="container">
       <h2 class="title">
-        DNS
+        Server
       </h2>
       <div class="field has-addons">
         <input id="dnsInput" class="input" type="text" size="40">
@@ -70,6 +64,16 @@
     </div>
   </section>
 
+  <section id="log">
+    <div class="container">
+      <h2 class="title">
+        Log
+      </h2>
+
+      <pre id="logText"></pre>
+    </div>
+  </section>
+
   <script>
     'use strict;'
 
@@ -77,7 +81,6 @@
       eorum: {
         input: document.getElementById('eorumInput'),
         button: document.getElementById("eorumButton"),
-        status: document.getElementById('eorumStatus')
       },
       dns: {
         input: document.getElementById("dnsInput"),
@@ -85,6 +88,9 @@
       },
       result: {
         text: document.getElementById("resultText")
+      },
+      log: {
+        text: document.getElementById('logText')
       }
     };
 
@@ -128,21 +134,30 @@
       return JSON.stringify(reply, null, 2);
     }
 
+    const log = (text) => {
+      const div = document.createElement('div');
+      div.innerHTML = text;
+      e.log.text.appendChild(div);
+
+      while (e.log.text.childElementCount > 10)
+        e.log.text.firstChild.remove();
+    }
+
     e.eorum.button.addEventListener('click', () => {
       if (!e.eorum.input.value)
         return;
 
-      e.eorum.status.innerHTML = "DNS query";
+      log("DNS query");
       e.dns.input.value = '';
       e.result.text.innerHTML = '';
 
       resolveDNS(e.eorum.input.value)
         .then((result) => {
           e.dns.input.value = result;
-          e.eorum.status.innerHTML = "DNS reply";
+          log("DNS reply");
         })
         .catch((error) => {
-          e.eorum.status.innerHTML = "DNS error: " + error;
+          log("DNS error: " + error);
         })
     });
 
@@ -150,16 +165,16 @@
       if (!e.dns.input.value)
         return;
 
-      e.eorum.status.innerHTML = "Eorum query";
+      log("Eorum query");
       e.result.text.innerHTML = '';
 
       resolveEorum(e.dns.input.value)
         .then((result) => {
           e.result.text.innerHTML = result;
-          e.eorum.status.innerHTML = "Eorum reply";
+          log("Eorum reply");
         })
         .catch((error) => {
-          e.eorum.status.innerHTML = "Eorum error: " + error;
+          log("Eorum error: " + error);
         })
     });
 
