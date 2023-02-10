@@ -22,6 +22,10 @@
       color: hsl(0, 0%, 21%);
     }
 
+    .navbar {
+      opacity: 95%;
+    }
+
     section {
       background-color: hsl(0, 0%, 92%);
       padding: 1rem;
@@ -51,16 +55,21 @@
       </div>
 
       <div class="navbar-menu">
-        <div class="navbar-start"></div>
+        <div class="navbar-start">
+          <a class="navbar-item" href="https://github.com/eorum/" target="github">
+            GitHub
+          </a>
+        </div>
       </div>
     </div>
   </nav>
-  
+
   <section id="eorum">
-    <div class="field has-addons">
-      <input id="eorumInput" class="input" type="email" value="info@eorum.org">
-      <button id="eorumButton" class="button">Resolve</button>
-    </div>
+    <div class="container">
+      <div class="field has-addons">
+        <input id="eorumInput" class="input" type="email" value="info@eorum.org">
+        <button id="eorumButton" class="button">Resolve</button>
+      </div>
     </div>
   </section>
 
@@ -98,6 +107,29 @@
 
   <script>
     'use strict;'
+
+    {
+      const burger = document.querySelector('.navbar-burger');
+      const menu = document.querySelector('.navbar-menu');
+
+      // Toggle menu with burger.
+      burger.addEventListener('click', () => {
+        burger.classList.toggle('is-active');
+        menu.classList.toggle('is-active');
+      });
+
+      window.addEventListener('click', (e) => {
+        // Do not act on the burger toggle event.
+        if (e.target == burger)
+          return;
+
+        if (!burger.classList.contains('is-active'))
+          return;
+
+        burger.classList.remove('is-active');
+        menu.classList.remove('is-active');
+      });
+    }
 
     const e = {
       eorum: {
@@ -169,7 +201,7 @@
       if (!e.eorum.input.value)
         return;
 
-      log("DNS query");
+      log("DNS query: " + e.eorum.input.value);
       e.dns.input.value = '';
       e.result.text.innerHTML = '';
 
@@ -187,7 +219,7 @@
       if (!e.dns.input.value)
         return;
 
-      log("Eorum query");
+      log("Eorum query: " + e.dns.input.value);
       e.result.text.innerHTML = '';
 
       resolveEorum(e.dns.input.value)
