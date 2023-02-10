@@ -103,7 +103,7 @@
       });
 
       if (!response.ok || response.status != 200)
-        throw 'DNS query error: ' + response.status;
+        throw response.status;
 
       const reply = await response.json();
       if (reply.Status === 0) {
@@ -111,7 +111,7 @@
         return 'https://' + target + (port != 443 ? ':' + port : '') + '/' + address;
 
       } else
-        throw 'DNS error: ' + String(reply.Status);
+        throw String(reply.Status);
     }
 
     async function resolveEorum(url) {
@@ -122,21 +122,16 @@
       });
 
       if (!response.ok || response.status != 200)
-        return 'Eorum query error: ' + response.status;
+        throw response.status;
 
       const reply = await response.json();
       return JSON.stringify(reply, null, 2);
     }
 
-    {
-      const url = new URL(window.location);
-      const their = url.searchParams.get('their');
-      if (their)
-        e.eorum.input.value = their;
-    }
-
     e.eorum.button.addEventListener('click', () => {
       e.eorum.status.innerHTML = "DNS query";
+      e.dns.input.value = '';
+      e.result.text.innerHTML = '';
 
       resolveDNS(e.eorum.input.value)
         .then((result) => {
@@ -144,13 +139,13 @@
           e.eorum.status.innerHTML = "DNS reply";
         })
         .catch((error) => {
-          e.dns.input.value = '';
           e.eorum.status.innerHTML = "DNS error: " + error;
         })
     });
 
     e.dns.button.addEventListener('click', () => {
       e.eorum.status.innerHTML = "Eorum query";
+      e.result.text.innerHTML = '';
 
       resolveEorum(e.dns.input.value)
         .then((result) => {
@@ -158,11 +153,16 @@
           e.eorum.status.innerHTML = "Eorum reply";
         })
         .catch((error) => {
-          e.result.text.innerHTML = '';
           e.eorum.status.innerHTML = "Eorum error: " + error;
         })
     });
 
+    {
+      const url = new URL(window.location);
+      const their = url.searchParams.get('their');
+      if (their)
+        e.eorum.input.value = their;
+    }
   </script>
 </body>
 </html>
