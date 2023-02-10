@@ -33,7 +33,29 @@
 
   </style>
 </head>
-<body>
+<body class="has-navbar-fixed-top">
+  <nav class="navbar is-fixed-top is-black" aria-label="navigation">
+    <div class="container">
+      <div class="navbar-brand">
+        <a class="navbar-home navbar-item is-size-4 pl-4" href="#">
+          <img src="icons/logo-black.svg" alt="" style="width: auto; height: 1.5rem;">
+          <h1 class="ml-3">
+            Eorum
+          </h1>
+        </a>
+        <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+          <span class="inactive" aria-hidden="true"></span>
+          <span class="inactive" aria-hidden="true"></span>
+          <span class="inactive" aria-hidden="true"></span>
+        </a>
+      </div>
+
+      <div class="navbar-menu">
+        <div class="navbar-start"></div>
+      </div>
+    </div>
+  </nav>
+  
   <section id="eorum">
     <div class="field has-addons">
       <input id="eorumInput" class="input" type="email" value="info@eorum.org">
