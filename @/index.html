@@ -54,7 +54,7 @@
       <div class="container">
         <div class="navbar-brand">
           <a class="navbar-home navbar-item is-size-4 pl-4" href="#">
-            <img src="icons/logo.svg" alt="" style="width: auto; height: 1.5rem;">
+            <img src="../icons/logo.svg" alt="" style="width: auto; height: 1.5rem;">
             <h1 class="ml-3">
               Eorum
             </h1>
@@ -76,9 +76,9 @@
       </div>
     </nav>
 
-    <section id="eorum">
+    <section id="result">
       <div class="container">
-        AA
+        <pre id="resultText" class="result"></pre>
       </div>
     </section>
 
@@ -106,6 +106,41 @@
           burger.classList.remove('is-active');
           menu.classList.remove('is-active');
         });
+      }
+
+      const e = {
+        result: {
+          text: document.getElementById("resultText")
+        }
+      };
+
+      async function resolveEorum(url) {
+        const response = await fetch(url, {
+          headers: {
+            accept: "application/json"
+          }
+        });
+
+        if (!response.ok || response.status != 200)
+          throw response.status;
+
+        const reply = await response.json();
+        return JSON.stringify(reply, null, 2);
+      }
+
+      const user = window.location.href.match(/@([^/]+)/);
+      if (user) {
+        (async () => {
+          try {
+            e.result.text.innerHTML = await resolveEorum('https://eorum.org/' + user[1] + '@eorum.org');
+
+          } catch (error) {
+            e.result.text.innerHTML = 'Eorum error';
+          }
+        })();
+
+      } else {
+        e.result.text.innerHTML = 'Unknown user';
       }
     </script>
   </body>
