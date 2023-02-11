@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="rating" content="safe for kids">
+    <meta name="description" content="Pretend it's nothing.">
+    <link rel="canonical" href="https://eorum.org/">
+    <meta name="theme-color" content="black">
+    <link rel="icon" href="../icons/logo-black.svg" media="(prefers-color-scheme: light)">
+    <link rel="icon" href="../icons/logo.svg" media="(prefers-color-scheme: dark)">
+    <link rel="stylesheet" href="../css/bulma.min.css">
+    <title>Eorum – It's theirs</title>
+    <style>
+      html {
+        background-color: black;
+        scroll-padding-top: 3.25rem;
+        scroll-behavior: smooth;
+        hyphens: auto;
+      }
+
+      body {
+        font-family: sans-serif;
+        color: hsl(0, 0%, 21%);
+      }
+
+      .navbar {
+        opacity: 95%;
+      }
+
+      section {
+        background-color: hsl(0, 0%, 92%);
+        padding: 1rem;
+      }
+
+      section:not(:first-of-type) {
+        margin-top: 0.25rem;
+      }
+
+      .result {
+        background-color: white;
+      }
+
+      .log {
+        height: 12rem;
+        background-color: white;
+        padding: 1rem;
+      }
+
+    </style>
+  </head>
+  <body class="has-navbar-fixed-top">
+    <nav class="navbar is-fixed-top is-black" aria-label="navigation">
+      <div class="container">
+        <div class="navbar-brand">
+          <a class="navbar-home navbar-item is-size-4 pl-4" href="#">
+            <img src="icons/logo.svg" alt="" style="width: auto; height: 1.5rem;">
+            <h1 class="ml-3">
+              Eorum
+            </h1>
+          </a>
+          <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+            <span class="inactive" aria-hidden="true"></span>
+            <span class="inactive" aria-hidden="true"></span>
+            <span class="inactive" aria-hidden="true"></span>
+          </a>
+        </div>
+
+        <div class="navbar-menu">
+          <div class="navbar-start">
+            <a class="navbar-item" href="https://github.com/eorum/" target="github">
+              GitHub
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <section id="eorum">
+      <div class="container">
+        AA
+      </div>
+    </section>
+
+    <script>
+      'use strict;';
+
+      {
+        const burger = document.querySelector('.navbar-burger');
+        const menu = document.querySelector('.navbar-menu');
+
+        // Toggle menu with burger.
+        burger.addEventListener('click', () => {
+          burger.classList.toggle('is-active');
+          menu.classList.toggle('is-active');
+        });
+
+        window.addEventListener('click', (e) => {
+          // Do not act on the burger toggle event.
+          if (e.target == burger)
+            return;
+
+          if (!burger.classList.contains('is-active'))
+            return;
+
+          burger.classList.remove('is-active');
+          menu.classList.remove('is-active');
+        });
+      }
+    </script>
+  </body>
+</html>
