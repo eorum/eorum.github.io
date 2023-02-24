@@ -1,6 +1,29 @@
 {
   "kay@eorum.org": {
     "name": "Kay Sievers",
-    "picture": "http://github.com/kaysievers.png"
+    "picture": "http://github.com/kaysievers.png",
+    "aka": [
+      "kay@versioduo.com"
+    ],
+    "bdf623e6-a4a7-43a9-b843-00b91eee8b76": {
+      "links": [
+        {
+          "title": "GitHub",
+          "url": "https://github.com/kaysievers"
+        },
+        {
+          "title": "Twitter",
+          "url": "https://twitter.com/kaysievers"
+        },
+        {
+          "title": "Mastodon",
+          "url": "https://mastodon.social/@kaysievers"
+        },
+        {
+          "title": "LinkedIn",
+          "url": "https://www.linkedin.com/in/kaysievers"
+        }
+      ]
+    }
   }
 }
