@@ -10,6 +10,7 @@
     <link rel="icon" href="icons/logo-black.svg" media="(prefers-color-scheme: light)">
     <link rel="icon" href="icons/logo.svg" media="(prefers-color-scheme: dark)">
     <link rel="stylesheet" href="css/bulma.min.css">
+    <script type="module" src="js/main.js"></script>
     <title>Eorum – It's theirs</title>
     <style>
       html {
@@ -47,6 +48,12 @@
         padding: 1rem;
       }
 
+      /* override bulma's negative icon rules for favicons */
+      .button .icon.favicon:first-child:last-child {
+        margin-left: 0.5rem;
+        margin-right: 0.5rem;
+      }
+
     </style>
   </head>
   <body class="has-navbar-fixed-top">
@@ -65,197 +72,39 @@
             <span class="inactive" aria-hidden="true"></span>
           </a>
         </div>
-
-        <div class="navbar-menu">
-          <div class="navbar-start">
-            <a class="navbar-item" href="https://github.com/eorum/" target="github">
-              GitHub
-            </a>
-          </div>
-        </div>
       </div>
     </nav>
 
     <section id="eorum">
       <div class="container">
         <div class="field has-addons">
-          <input id="eorumInput" class="input" type="email" value="info@eorum.org">
-          <button id="eorumButton" class="button">Resolve</button>
+          <input id="searchField" class="input" type="email" value="info@eorum.org">
+          <button id="searchButton" class="button">Search</button>
         </div>
       </div>
     </section>
 
-    <section id="dns">
+    <section id="results">
       <div class="container">
-        <h2 class="title">
-          Server
-        </h2>
-        <div class="field has-addons">
-          <input id="dnsInput" class="input" type="text" size="40">
-          <button id="dnsButton" class="button">Request</button>
-        </div>
+        <template id="result">
+          <div class="columns">
+            <div class="column is-narrow">
+              <img class="picture" width="250" height="250">
+              <h2 class="title"></h2>
+              <h3 class="subtitle"></h3>
+            </div>
+            <div class="column is-one-third buttons"></div>
+          </div>
+        </template>
+
+        <template id="link">
+          <a class="button" target="_blank">
+            <span class="icon favicon">
+              <img alt="favicon">
+            </span>
+          </a>
+        </template>
       </div>
     </section>
-
-    <section id="result">
-      <div class="container">
-        <h2 class="title">
-          Result
-        </h2>
-
-        <pre id="resultText" class="result"></pre>
-      </div>
-    </section>
-
-    <section id="log">
-      <div class="container">
-        <h2 class="title">
-          Log
-        </h2>
-
-        <div id="logText" class="log content is-small" cols="10"></div>
-      </div>
-    </section>
-
-    <script>
-      'use strict;';
-
-      {
-        const burger = document.querySelector('.navbar-burger');
-        const menu = document.querySelector('.navbar-menu');
-
-        // Toggle menu with burger.
-        burger.addEventListener('click', () => {
-          burger.classList.toggle('is-active');
-          menu.classList.toggle('is-active');
-        });
-
-        window.addEventListener('click', (e) => {
-          // Do not act on the burger toggle event.
-          if (e.target == burger)
-            return;
-
-          if (!burger.classList.contains('is-active'))
-            return;
-
-          burger.classList.remove('is-active');
-          menu.classList.remove('is-active');
-        });
-      }
-
-      const e = {
-        eorum: {
-          input: document.getElementById('eorumInput'),
-          button: document.getElementById("eorumButton"),
-        },
-        dns: {
-          input: document.getElementById("dnsInput"),
-          button: document.getElementById("dnsButton")
-        },
-        result: {
-          text: document.getElementById("resultText")
-        },
-        log: {
-          text: document.getElementById('logText')
-        }
-      };
-
-      async function resolveDNS(address) {
-        const [user, domain] = address.split("@");
-        const params = new URLSearchParams({
-          name: "_eorum._tcp." + domain,
-          type: "SRV"
-        });
-
-        const url = "https://cloudflare-dns.com/dns-query?" + params.toString();
-        const response = await fetch(url, {
-          headers: {
-            accept: "application/dns-json"
-          }
-        });
-
-        if (!response.ok || response.status != 200)
-          throw response.status;
-
-        const reply = await response.json();
-        if (reply.Status === 0) {
-          const [prio, weight, port, target] = reply.Answer[0].data.split(' ');
-          return 'https://' + target + (port != 443 ? ':' + port : '') + '/' + address;
-
-        } else {
-          switch (reply.Status) {
-            case 3:
-              throw "NXDOMAIN";
-            case 5:
-              throw "REFUSED";
-            default:
-              throw 'Error ' + reply.Status;
-          }
-        }
-      }
-
-      async function resolveEorum(url) {
-        const response = await fetch(url, {
-          headers: {
-            accept: "application/json"
-          }
-        });
-
-        if (!response.ok || response.status != 200)
-          throw response.status;
-
-        const reply = await response.json();
-        return JSON.stringify(reply, null, 2);
-      }
-
-      const log = (text) => {
-        const div = document.createElement('div');
-        div.innerHTML = text;
-        e.log.text.appendChild(div);
-
-        while (e.log.text.childElementCount > 9)
-          e.log.text.firstChild.remove();
-      };
-
-      e.eorum.button.addEventListener('click', async () => {
-        if (!e.eorum.input.value)
-          return;
-
-        log("DNS query: " + e.eorum.input.value);
-        e.dns.input.value = '';
-        e.result.text.innerHTML = '';
-
-        try {
-          e.dns.input.value = await resolveDNS(e.eorum.input.value);
-          log("DNS reply: Success");
-
-        } catch (error) {
-          log("DNS error: " + error);
-        }
-      });
-
-      e.dns.button.addEventListener('click', async () => {
-        if (!e.dns.input.value)
-          return;
-
-        log("Eorum query: " + e.dns.input.value);
-        e.result.text.innerHTML = '';
-
-        try {
-          e.result.text.innerHTML = await resolveEorum(e.dns.input.value);
-          log("Eorum reply: Success");
-
-        } catch (error) {
-          log("Eorum error: " + error);
-        }
-      });
-
-      {
-        const url = new URL(window.location);
-        const their = url.searchParams.get('their');
-        if (their)
-          e.eorum.input.value = their;
-      }
-    </script>
   </body>
 </html>

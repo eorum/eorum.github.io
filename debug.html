@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="rating" content="safe for kids">
+    <meta name="description" content="Pretend it's nothing.">
+    <link rel="canonical" href="https://eorum.org/">
+    <meta name="theme-color" content="black">
+    <link rel="icon" href="icons/logo-black.svg" media="(prefers-color-scheme: light)">
+    <link rel="icon" href="icons/logo.svg" media="(prefers-color-scheme: dark)">
+    <link rel="stylesheet" href="css/bulma.min.css">
+    <title>Eorum – It's theirs</title>
+    <style>
+      html {
+        background-color: black;
+        scroll-padding-top: 3.25rem;
+        scroll-behavior: smooth;
+        hyphens: auto;
+      }
+
+      body {
+        font-family: sans-serif;
+        color: hsl(0, 0%, 21%);
+      }
+
+      .navbar {
+        opacity: 95%;
+      }
+
+      section {
+        background-color: hsl(0, 0%, 92%);
+        padding: 1rem;
+      }
+
+      section:not(:first-of-type) {
+        margin-top: 0.25rem;
+      }
+
+      .result {
+        background-color: white;
+      }
+
+      .log {
+        height: 12rem;
+        background-color: white;
+        padding: 1rem;
+      }
+
+    </style>
+  </head>
+  <body class="has-navbar-fixed-top">
+    <nav class="navbar is-fixed-top is-black" aria-label="navigation">
+      <div class="container">
+        <div class="navbar-brand">
+          <a class="navbar-home navbar-item is-size-4 pl-4" href="#">
+            <img src="icons/logo.svg" alt="" style="width: auto; height: 1.5rem;">
+            <h1 class="ml-3">
+              Eorum
+            </h1>
+          </a>
+          <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+            <span class="inactive" aria-hidden="true"></span>
+            <span class="inactive" aria-hidden="true"></span>
+            <span class="inactive" aria-hidden="true"></span>
+          </a>
+        </div>
+
+        <div class="navbar-menu">
+          <div class="navbar-start">
+            <a class="navbar-item" href="https://github.com/eorum/" target="github">
+              GitHub
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <section id="eorum">
+      <div class="container">
+        <div class="field has-addons">
+          <input id="eorumInput" class="input" type="email" value="info@eorum.org">
+          <button id="eorumButton" class="button">Resolve</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="dns">
+      <div class="container">
+        <h2 class="title">
+          Server
+        </h2>
+        <div class="field has-addons">
+          <input id="dnsInput" class="input" type="text" size="40">
+          <button id="dnsButton" class="button">Request</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="result">
+      <div class="container">
+        <h2 class="title">
+          Result
+        </h2>
+
+        <pre id="resultText" class="result"></pre>
+      </div>
+    </section>
+
+    <section id="log">
+      <div class="container">
+        <h2 class="title">
+          Log
+        </h2>
+
+        <div id="logText" class="log content is-small" cols="10"></div>
+      </div>
+    </section>
+
+    <script>
+      'use strict;';
+
+      {
+        const burger = document.querySelector('.navbar-burger');
+        const menu = document.querySelector('.navbar-menu');
+
+        // Toggle menu with burger.
+        burger.addEventListener('click', () => {
+          burger.classList.toggle('is-active');
+          menu.classList.toggle('is-active');
+        });
+
+        window.addEventListener('click', (e) => {
+          // Do not act on the burger toggle event.
+          if (e.target == burger)
+            return;
+
+          if (!burger.classList.contains('is-active'))
+            return;
+
+          burger.classList.remove('is-active');
+          menu.classList.remove('is-active');
+        });
+      }
+
+      const e = {
+        eorum: {
+          input: document.getElementById('eorumInput'),
+          button: document.getElementById("eorumButton"),
+        },
+        dns: {
+          input: document.getElementById("dnsInput"),
+          button: document.getElementById("dnsButton")
+        },
+        result: {
+          text: document.getElementById("resultText")
+        },
+        log: {
+          text: document.getElementById('logText')
+        }
+      };
+
+      async function resolveDNS(address) {
+        const [user, domain] = address.split("@");
+        const params = new URLSearchParams({
+          name: "_eorum._tcp." + domain,
+          type: "SRV"
+        });
+
+        const url = "https://cloudflare-dns.com/dns-query?" + params.toString();
+        const response = await fetch(url, {
+          headers: {
+            accept: "application/dns-json"
+          }
+        });
+
+        if (!response.ok || response.status != 200)
+          throw response.status;
+
+        const reply = await response.json();
+        if (reply.Status === 0) {
+          const [prio, weight, port, target] = reply.Answer[0].data.split(' ');
+          return 'https://' + target + (port != 443 ? ':' + port : '') + '/' + address;
+
+        } else {
+          switch (reply.Status) {
+            case 3:
+              throw "NXDOMAIN";
+            case 5:
+              throw "REFUSED";
+            default:
+              throw 'Error ' + reply.Status;
+          }
+        }
+      }
+
+      async function resolveEorum(url) {
+        const response = await fetch(url, {
+          headers: {
+            accept: "application/json"
+          }
+        });
+
+        if (!response.ok || response.status != 200)
+          throw response.status;
+
+        const reply = await response.json();
+        return JSON.stringify(reply, null, 2);
+      }
+
+      const log = (text) => {
+        const div = document.createElement('div');
+        div.innerHTML = text;
+        e.log.text.appendChild(div);
+
+        while (e.log.text.childElementCount > 9)
+          e.log.text.firstChild.remove();
+      };
+
+      e.eorum.button.addEventListener('click', async () => {
+        if (!e.eorum.input.value)
+          return;
+
+        log("DNS query: " + e.eorum.input.value);
+        e.dns.input.value = '';
+        e.result.text.innerHTML = '';
+
+        try {
+          e.dns.input.value = await resolveDNS(e.eorum.input.value);
+          log("DNS reply: Success");
+
+        } catch (error) {
+          log("DNS error: " + error);
+        }
+      });
+
+      e.dns.button.addEventListener('click', async () => {
+        if (!e.dns.input.value)
+          return;
+
+        log("Eorum query: " + e.dns.input.value);
+        e.result.text.innerHTML = '';
+
+        try {
+          e.result.text.innerHTML = await resolveEorum(e.dns.input.value);
+          log("Eorum reply: Success");
+
+        } catch (error) {
+          log("Eorum error: " + error);
+        }
+      });
+
+      {
+        const url = new URL(window.location);
+        const their = url.searchParams.get('their');
+        if (their)
+          e.eorum.input.value = their;
+      }
+    </script>
+  </body>
+</html>
