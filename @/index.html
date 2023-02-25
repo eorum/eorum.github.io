@@ -10,6 +10,7 @@
     <link rel="icon" href="../icons/logo-black.svg" media="(prefers-color-scheme: light)">
     <link rel="icon" href="../icons/logo.svg" media="(prefers-color-scheme: dark)">
     <link rel="stylesheet" href="../css/bulma.min.css">
+    <script type="module" src="main.js"></script>
     <title>Eorum – It's theirs</title>
     <style>
       html {
@@ -47,6 +48,12 @@
         padding: 1rem;
       }
 
+      /* override bulma's negative icon rules for favicons */
+      .button .icon.favicon:first-child:last-child {
+        margin-left: 0.5rem;
+        margin-right: 0.5rem;
+      }
+
     </style>
   </head>
   <body class="has-navbar-fixed-top">
@@ -65,83 +72,30 @@
             <span class="inactive" aria-hidden="true"></span>
           </a>
         </div>
-
-        <div class="navbar-menu">
-          <div class="navbar-start">
-            <a class="navbar-item" href="https://github.com/eorum/" target="github">
-              GitHub
-            </a>
-          </div>
-        </div>
       </div>
     </nav>
 
-    <section id="result">
+    <section id="results">
       <div class="container">
-        <pre id="resultText" class="result"></pre>
+        <template id="result">
+          <div class="columns">
+            <div class="column is-narrow">
+              <img class="picture" width="250" height="250">
+              <h2 class="title"></h2>
+              <h3 class="subtitle"></h3>
+            </div>
+            <div class="column is-one-third buttons"></div>
+          </div>
+        </template>
+
+        <template id="link">
+          <a class="button" target="_blank">
+            <span class="icon favicon">
+              <img alt="favicon">
+            </span>
+          </a>
+        </template>
       </div>
     </section>
-
-    <script>
-      'use strict;';
-
-      {
-        const burger = document.querySelector('.navbar-burger');
-        const menu = document.querySelector('.navbar-menu');
-
-        // Toggle menu with burger.
-        burger.addEventListener('click', () => {
-          burger.classList.toggle('is-active');
-          menu.classList.toggle('is-active');
-        });
-
-        window.addEventListener('click', (e) => {
-          // Do not act on the burger toggle event.
-          if (e.target == burger)
-            return;
-
-          if (!burger.classList.contains('is-active'))
-            return;
-
-          burger.classList.remove('is-active');
-          menu.classList.remove('is-active');
-        });
-      }
-
-      const e = {
-        result: {
-          text: document.getElementById("resultText")
-        }
-      };
-
-      async function resolveEorum(url) {
-        const response = await fetch(url, {
-          headers: {
-            accept: "application/json"
-          }
-        });
-
-        if (!response.ok || response.status != 200)
-          throw response.status;
-
-        const reply = await response.json();
-        return JSON.stringify(reply, null, 2);
-      }
-
-      const user = window.location.href.match(/@([^/]+)/);
-      if (user) {
-        (async () => {
-          try {
-            e.result.text.innerHTML = await resolveEorum('https://eorum.org/' + user[1] + '@eorum.org');
-
-          } catch (error) {
-            e.result.text.innerHTML = 'Eorum error';
-          }
-        })();
-
-      } else {
-        e.result.text.innerHTML = 'Unknown user';
-      }
-    </script>
   </body>
 </html>
