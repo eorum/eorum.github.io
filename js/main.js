@@ -16,7 +16,7 @@ function populateResult(account, info) {
 
   const ext = info[eorum.extensions.links];
   if (ext !== undefined) {
-    let buttons = result.querySelector("div.buttons")
+    let buttons = result.querySelector("div.buttons");
     for (let link of ext.links || []) {
       let fragment = e.linkTemplate.content.cloneNode(true);
 
@@ -38,12 +38,12 @@ function search(account) {
   eorum.lookup(account).then(infos => populateResult(account, infos[account]));
 }
 
-e.searchField.onkeypress = function(event) {
+e.searchField.onkeydown = function(event) {
   if (event.key === "Enter") {
     event.preventDefault();
     search(e.searchField.value);
   }
-}
+};
 
 e.searchButton.onclick = function(event) {
   event.preventDefault();
